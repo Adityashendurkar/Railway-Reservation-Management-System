@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Indian Railways — Reservation System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #0d1b2a;
+    --deep: #112240;
+    --orange: #e8651a;
+    --gold: #f5a623;
+    --cream: #faf6f0;
+    --white: #ffffff;
+    --muted: #8892a4;
+    --border: rgba(255,255,255,0.08);
+    --card-bg: rgba(255,255,255,0.04);
+    --success: #2ecc71;
+    --danger: #e74c3c;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--cream);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--deep);
+    border-bottom: 2px solid var(--orange);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; position: sticky; top:0; z-index:100;
+  }
+  .nav-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; color: var(--gold);
+    display:flex; align-items:center; gap:10px;
+  }
+  .nav-brand span { font-size: 1.5rem; }
+  .nav-links { display:flex; gap:0.5rem; }
+  .nav-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--cream); padding: 6px 16px; border-radius: 6px;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover, .nav-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+  #logoutBtn { display:none; }
+
+  /* PAGES */
+  .page { display:none; padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  .page.active { display:block; }
+
+  /* HERO */
+  .hero {
+    text-align:center; padding: 4rem 2rem;
+    background: linear-gradient(135deg, var(--deep) 0%, #1a3a5c 100%);
+    border-radius: 16px; margin-bottom: 2rem;
+    border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content:''; position:absolute; top:-50%; left:-50%;
+    width:200%; height:200%;
+    background: radial-gradient(ellipse at center, rgba(232,101,26,0.08) 0%, transparent 60%);
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: var(--gold); margin-bottom: 1rem; position:relative;
+  }
+  .hero p { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; position:relative; }
+  .hero-actions { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; position:relative; }
+
+  /* SEARCH BAR */
+  .search-box {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+  }
+  .search-box h3 { color: var(--gold); margin-bottom: 1rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+  .search-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end; }
+
+  /* CARDS */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+  .card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover { border-color: var(--orange); transform: translateY(-2px); }
+  .card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; }
+  .card-title { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1rem; }
+  .badge {
+    font-size: 0.7rem; padding: 3px 8px; border-radius: 20px;
+    background: rgba(232,101,26,0.2); color: var(--orange); border: 1px solid var(--orange);
+  }
+  .badge.green { background: rgba(46,204,113,0.15); color: var(--success); border-color: var(--success); }
+  .badge.red { background: rgba(231,76,60,0.15); color: var(--danger); border-color: var(--danger); }
+  .card-meta { color: var(--muted); font-size: 0.85rem; line-height: 1.8; }
+  .card-meta strong { color: var(--cream); }
+  .card-footer { margin-top: 1rem; display:flex; gap:0.5rem; }
+
+  /* FORMS */
+  .form-card {
+    background: var(--deep); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2rem; max-width: 480px; margin: 0 auto;
+  }
+  .form-card h2 {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold); margin-bottom: 1.5rem; font-size: 1.5rem;
+  }
+  .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:1rem; }
+  .form-group.full { grid-column: 1/-1; }
+  label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select, textarea {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    color: var(--cream); padding: 10px 14px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: var(--orange); }
+  input::placeholder { color: var(--muted); }
+  select option { background: var(--navy); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px; border-radius: 8px; border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; font-weight: 500; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--orange); color: #fff; }
+  .btn-primary:hover { background: #c9571a; }
+  .btn-outline { background: none; border: 1px solid var(--border); color: var(--cream); }
+  .btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-full { width: 100%; margin-top: 0.5rem; padding: 12px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--deep); color: var(--gold);
+    padding: 12px 16px; text-align:left; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+  }
+  td { padding: 12px 16px; font-size: 0.9rem; border-bottom: 1px solid var(--border); color: var(--cream); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ALERTS */
+  .alert {
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 1rem;
+    font-size: 0.9rem; display:none;
+  }
+  .alert.show { display:block; }
+  .alert-success { background: rgba(46,204,113,0.15); border: 1px solid var(--success); color: var(--success); }
+  .alert-error { background: rgba(231,76,60,0.15); border: 1px solid var(--danger); color: var(--danger); }
+
+  /* TABS */
+  .tabs { display:flex; gap:0; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+  .tab-btn {
+    background: none; border: none; color: var(--muted);
+    padding: 10px 20px; cursor:pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+
+  /* TICKET CARD */
+  .ticket-card {
+    background: linear-gradient(135deg, var(--deep), #1a3050);
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.5rem; margin-bottom: 1rem; position: relative;
+    overflow: hidden;
+  }
+  .ticket-card::before {
+    content: '🚂';
+    position: absolute; right: 1rem; top: 50%;
+    transform: translateY(-50%); font-size: 3rem; opacity: 0.08;
+  }
+  .ticket-route {
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .ticket-city { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); }
+  .ticket-arrow { color: var(--orange); font-size: 1.5rem; }
+  .ticket-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem; }
+  .ticket-detail-item { font-size: 0.8rem; }
+  .ticket-detail-item .label { color: var(--muted); display:block; }
+  .ticket-detail-item .value { color: var(--cream); font-weight: 500; }
+
+  /* PAYMENT MODAL */
+  .modal-overlay {
+    display:none; position:fixed; inset:0;
+    background: rgba(0,0,0,0.7); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display:flex; }
+  .modal {
+    background: var(--deep); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2rem; max-width: 420px; width:90%;
+  }
+  .modal h3 { font-family: 'Playfair Display', serif; color: var(--gold); margin-bottom: 1rem; }
+  .amount-display {
+    background: rgba(232,101,26,0.1); border: 1px solid rgba(232,101,26,0.3);
+    border-radius: 10px; padding: 1rem; text-align:center; margin: 1rem 0;
+  }
+  .amount-display .amount { font-size: 2rem; font-weight:700; color: var(--orange); }
+  .modal-btns { display:flex; gap:1rem; margin-top:1rem; }
+
+  /* SECTION HEADER */
+  .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
+  .section-header h2 { font-family: 'Playfair Display', serif; color: var(--gold); }
+
+  /* STAT CARDS */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem; text-align:center;
+  }
+  .stat-card .stat-val { font-size: 2rem; font-weight:700; color: var(--orange); }
+  .stat-card .stat-label { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+
+  /* LOGIN TABS */
+  .login-tabs { display:flex; gap:0; margin-bottom:1.5rem; border: 1px solid var(--border); border-radius: 8px; overflow:hidden; }
+  .login-tab {
+    flex:1; background: none; border:none; color: var(--muted);
+    padding: 10px; cursor:pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+  }
+  .login-tab.active { background: var(--orange); color: #fff; }
+
+  .divider { border:none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  .text-center { text-align: center; }
+  .text-muted { color: var(--muted); font-size: 0.85rem; }
+  .link-btn { background:none; border:none; color: var(--orange); cursor:pointer; font-size:0.85rem; text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 1rem; }
+    .nav-links .nav-btn span { display:none; }
+    .search-row { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav>
+  <div class="nav-brand"><span>🚆</span> Indian Railways</div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showPage('home')">Home</button>
+    <button class="nav-btn" onclick="showPage('trains')" id="navTrains">Trains</button>
+    <button class="nav-btn" id="navMyTickets" onclick="showPage('myTickets')" style="display:none">My Tickets</button>
+    <button class="nav-btn" id="navAdmin" onclick="showPage('admin')" style="display:none">Admin Panel</button>
+    <button class="nav-btn" onclick="showPage('login')" id="loginBtn">Login / Register</button>
+    <button class="nav-btn btn-danger" onclick="logout()" id="logoutBtn">Logout</button>
+  </div>
+</nav>
+
+<!-- ============== HOME PAGE ============== -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <h1>Book Your Journey Today</h1>
+    <p>Fast, secure railway reservations across India</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="showPage('trains')">🔍 Search Trains</button>
+      <button class="btn btn-outline" onclick="showPage('login')">👤 Login / Register</button>
+    </div>
+  </div>
+
+  <div class="search-box">
+    <h3>🔍 Quick Train Search</h3>
+    <div class="search-row">
+      <div class="form-group" style="margin:0">
+        <label>From Station</label>
+        <input type="text" id="homeSource" placeholder="e.g. Mumbai"/>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>To Station</label>
+        <input type="text" id="homeDestination" placeholder="e.g. Nagpur"/>
+      </div>
+      <button class="btn btn-primary" onclick="quickSearch()">Search</button>
+    </div>
+  </div>
+
+  <div id="homeSearchResults"></div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-header"><div class="card-title">⚡ Fast Booking</div></div>
+      <div class="card-meta">Book tickets in minutes with real-time seat availability across all train classes.</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">🔒 Secure Payments</div></div>
+      <div class="card-meta">Safe and tracked payment processing with instant confirmation and payment ID.</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📋 Manage Bookings</div></div>
+      <div class="card-meta">View, track and cancel your reservations anytime from your dashboard.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== TRAINS PAGE ============== -->
+<div class="page" id="page-trains">
+  <div class="section-header">
+    <h2>🚂 Available Trains</h2>
+    <button class="btn btn-outline btn-sm" onclick="loadTrains()">↻ Refresh</button>
+  </div>
+
+  <div class="search-box">
+    <h3>🔍 Filter Trains</h3>
+    <div class="search-row">
+      <div class="form-group" style="margin:0">
+        <label>From</label>
+        <input type="text" id="filterSource" placeholder="Source city"/>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>To</label>
+        <input type="text" id="filterDest" placeholder="Destination city"/>
+      </div>
+      <button class="btn btn-primary" onclick="searchTrains()">Search</button>
+    </div>
+  </div>
+
+  <div id="trainsList"></div>
+</div>
+
+<!-- ============== MY TICKETS PAGE ============== -->
+<div class="page" id="page-myTickets">
+  <div class="section-header">
+    <h2>🎫 My Tickets</h2>
+    <button class="btn btn-outline btn-sm" onclick="loadMyTickets()">↻ Refresh</button>
+  </div>
+  <div id="myTicketsList"><p style="color:var(--muted)">Loading...</p></div>
+</div>
+
+<!-- ============== BOOK TICKET PAGE ============== -->
+<div class="page" id="page-book">
+  <div class="form-card" style="max-width:600px">
+    <h2>🎫 Book Ticket</h2>
+    <div id="bookAlert" class="alert"></div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Train</label>
+        <select id="bookTrain" onchange="updateFare()">
+          <option value="">— Select Train —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Travel Class</label>
+        <select id="bookClass" disabled>
+          <option value="">Select train first</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>From (Source)</label>
+        <input type="text" id="bookSource" placeholder="e.g. Mumbai"/>
+      </div>
+      <div class="form-group">
+        <label>To (Destination)</label>
+        <input type="text" id="bookDest" placeholder="e.g. Nagpur"/>
+      </div>
+      <div class="form-group">
+        <label>Travel Date</label>
+        <input type="date" id="bookDate"/>
+      </div>
+      <div class="form-group">
+        <label>No. of Passengers</label>
+        <input type="number" id="bookPassengers" min="1" max="6" value="1" oninput="updateFare()"/>
+      </div>
+      <div class="form-group full">
+        <label>Reservation Type</label>
+        <select id="bookResType">
+          <option value="General">General</option>
+          <option value="Tatkal">Tatkal</option>
+          <option value="Ladies">Ladies</option>
+          <option value="Senior Citizen">Senior Citizen</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="amount-display" id="fareDisplay" style="display:none">
+      <div style="color:var(--muted); font-size:0.8rem;">ESTIMATED FARE</div>
+      <div class="amount" id="fareAmount">₹0</div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="bookTicket()">Confirm Booking →</button>
+    <div class="text-center" style="margin-top:1rem">
+      <button class="link-btn" onclick="showPage('trains')">← Back to Trains</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== LOGIN PAGE ============== -->
+<div class="page" id="page-login">
+  <div class="form-card">
+    <h2>Welcome Back</h2>
+
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab('passenger')">Passenger</button>
+      <button class="login-tab" onclick="switchLoginTab('supervisor')">Supervisor</button>
+    </div>
+
+    <!-- Passenger Auth -->
+    <div id="passengerAuth">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchAuthTab('loginTab', 'passenger')">Login</button>
+        <button class="tab-btn" onclick="switchAuthTab('registerTab', 'passenger')">Register</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="tab-content active" id="loginTab">
+        <div id="loginAlert" class="alert"></div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="loginPhone" placeholder="Your registered phone"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPass" placeholder="Your password"/>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="loginPassenger()">Login →</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="tab-content" id="registerTab">
+        <div id="registerAlert" class="alert"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="regName" placeholder="Your name"/>
+          </div>
+          <div class="form-group">
+            <label>Age</label>
+            <input type="number" id="regAge" placeholder="Age" min="1"/>
+          </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <select id="regGender">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="regPhone" placeholder="Mobile number"/>
+          </div>
+          <div class="form-group full">
+            <label>Password</label>
+            <input type="password" id="regPass" placeholder="Create password"/>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="registerPassenger()">Create Account →</button>
+      </div>
+    </div>
+
+    <!-- Supervisor Auth -->
+    <div id="supervisorAuth" style="display:none">
+      <div id="supLoginAlert" class="alert"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="supEmail" placeholder="supervisor@railway.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="supPass" placeholder="Password"/>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="loginSupervisor()">Login as Supervisor →</button>
+      <p class="text-muted text-center" style="margin-top:1rem">Default: admin@railway.com / admin123</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============== ADMIN PAGE ============== -->
+<div class="page" id="page-admin">
+  <div class="section-header">
+    <h2>⚙️ Admin Panel</h2>
+    <span id="supervisorName" class="badge green"></span>
+  </div>
+
+  <div class="stats-row" id="adminStats"></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchAdminTab('adminTrains')">Manage Trains</button>
+    <button class="tab-btn" onclick="switchAdminTab('adminTickets')">All Tickets</button>
+  </div>
+
+  <!-- MANAGE TRAINS -->
+  <div class="tab-content active" id="adminTrains">
+    <div class="form-card" style="max-width:100%; margin:0 0 2rem 0">
+      <h2 style="font-size:1.1rem">Add New Train</h2>
+      <div id="addTrainAlert" class="alert"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Train Number</label>
+          <input type="text" id="atNo" placeholder="e.g. 12006"/>
+        </div>
+        <div class="form-group">
+          <label>Train Name</label>
+          <input type="text" id="atName" placeholder="e.g. Vande Bharat"/>
+        </div>
+        <div class="form-group">
+          <label>Compartment Type</label>
+          <select id="atComp">
+            <option>AC Chair Car</option>
+            <option>AC 3-Tier</option>
+            <option>Sleeper</option>
+            <option>Second Sitting</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Reservation Halting</label>
+          <input type="text" id="atHalting" placeholder="City1 - City2 - City3"/>
+        </div>
+        <div class="form-group full">
+          <label>Halt Stations</label>
+          <input type="text" id="atStations" placeholder="Station1, Station2, Station3"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addTrain()">+ Add Train</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="adminTrainsTable">
+        <thead><tr>
+          <th>Train No</th><th>Train Name</th><th>Compartment</th>
+          <th>Route</th><th>Chart</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="adminTrainsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ALL TICKETS -->
+  <div class="tab-content" id="adminTickets">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Ticket ID</th><th>Passenger</th><th>Route</th><th>Train</th>
+          <th>Date</th><th>Passengers</th><th>Amount</th><th>Payment</th>
+        </tr></thead>
+        <tbody id="adminTicketsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <h3>💳 Complete Payment</h3>
+    <p class="text-muted">Ticket has been booked! Complete payment to confirm reservation.</p>
+    <div class="amount-display">
+      <div style="color:var(--muted); font-size:0.8rem;">TOTAL AMOUNT</div>
+      <div class="amount" id="modalAmount">₹0</div>
+      <div style="color:var(--muted); font-size:0.75rem; margin-top:4px" id="modalTicketId"></div>
+    </div>
+    <div id="paymentAlert" class="alert"></div>
+    <div class="modal-btns">
+      <button class="btn btn-success" style="flex:1" onclick="completePayment()">✓ Pay Now</button>
+      <button class="btn btn-outline" onclick="closePaymentModal()">Pay Later</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "http://127.0.0.1:5000/api";
+let currentUser = null;
+let currentUserType = null;
+let pendingPaymentId = null;
+let allTrainsData = [];
+
+const fareMap = { "AC Chair Car": 800, "AC 3-Tier": 1200, "Sleeper": 400, "Second Sitting": 200 };
+
+// ============================================
+// PAGE NAVIGATION
+// ============================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+
+  if (name === 'trains') { loadTrains(); }
+  if (name === 'myTickets') { loadMyTickets(); }
+  if (name === 'book') { populateTrainDropdown(); }
+  if (name === 'admin') { loadAdminData(); }
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.className = `alert alert-${type} show`;
+  el.textContent = msg;
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// ============================================
+// TRAIN FUNCTIONS
+// ============================================
+async function loadTrains() {
+  const res = await fetch(`${API}/trains`);
+  const data = await res.json();
+  allTrainsData = data.trains || [];
+  renderTrains(allTrainsData);
+}
+
+async function searchTrains() {
+  const src = document.getElementById('filterSource').value;
+  const dst = document.getElementById('filterDest').value;
+  if (!src && !dst) { loadTrains(); return; }
+  const res = await fetch(`${API}/trains/search?source=${src}&destination=${dst}`);
+  const data = await res.json();
+  renderTrains(data.trains || []);
+}
+
+async function quickSearch() {
+  const src = document.getElementById('homeSource').value;
+  const dst = document.getElementById('homeDestination').value;
+  const res = await fetch(`${API}/trains/search?source=${src}&destination=${dst}`);
+  const data = await res.json();
+  const container = document.getElementById('homeSearchResults');
+  if (!data.trains || data.trains.length === 0) {
+    container.innerHTML = `<p style="color:var(--muted); margin-bottom:1rem">No trains found for that route.</p>`;
+  } else {
+    container.innerHTML = `<div class="section-header"><h2>🔍 Search Results</h2></div>`;
+    container.innerHTML += renderTrainCards(data.trains, false);
+  }
+}
+
+function renderTrains(trains) {
+  const container = document.getElementById('trainsList');
+  if (!trains || trains.length === 0) {
+    container.innerHTML = `<p style="color:var(--muted)">No trains found.</p>`;
+    return;
+  }
+  container.innerHTML = renderTrainCards(trains, true);
+}
+
+function renderTrainCards(trains, showBook) {
+  return `<div class="cards-grid">` + trains.map(t => `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🚂 ${t.train_name}</div>
+        <span class="badge">${t.train_no}</span>
+      </div>
+      <div class="card-meta">
+        <strong>Class:</strong> ${t.compartment}<br>
+        <strong>Route:</strong> ${t.reservation_halting || 'N/A'}<br>
+        <strong>Stops:</strong> ${t.train_halt_at_station || 'N/A'}<br>
+        <strong>Fare/Person:</strong> ₹${fareMap[t.compartment] || 500}
+      </div>
+      ${showBook ? `<div class="card-footer">
+        <button class="btn btn-primary btn-sm" onclick="goBook('${t.train_no}')">Book Ticket</button>
+      </div>` : ''}
+    </div>
+  `).join('') + `</div>`;
+}
+
+function goBook(trainNo) {
+  if (!currentUser) {
+    alert("Please login first to book a ticket.");
+    showPage('login'); return;
+  }
+  showPage('book');
+  setTimeout(() => {
+    document.getElementById('bookTrain').value = trainNo;
+    updateFare();
+    updateClassDropdown(trainNo);
+  }, 100);
+}
+
+// ============================================
+// BOOKING
+// ============================================
+async function populateTrainDropdown() {
+  if (allTrainsData.length === 0) {
+    const res = await fetch(`${API}/trains`);
+    const data = await res.json();
+    allTrainsData = data.trains || [];
+  }
+  const sel = document.getElementById('bookTrain');
+  sel.innerHTML = `<option value="">— Select Train —</option>` +
+    allTrainsData.map(t => `<option value="${t.train_no}">${t.train_name} (${t.train_no})</option>`).join('');
+
+  // Set min date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('bookDate').min = today;
+  document.getElementById('bookDate').value = today;
+}
+
+function updateClassDropdown(trainNo) {
+  const train = allTrainsData.find(t => t.train_no === trainNo);
+  const sel = document.getElementById('bookClass');
+  if (train) {
+    sel.innerHTML = `<option value="${train.compartment}">${train.compartment}</option>`;
+    sel.disabled = false;
+  } else {
+    sel.innerHTML = `<option>Select train first</option>`;
+    sel.disabled = true;
+  }
+  updateFare();
+}
+
+function updateFare() {
+  const trainNo = document.getElementById('bookTrain').value;
+  const train = allTrainsData.find(t => t.train_no === trainNo);
+  const passengers = parseInt(document.getElementById('bookPassengers').value) || 1;
+  const display = document.getElementById('fareDisplay');
+
+  if (train) {
+    updateClassDropdown(trainNo);
+    const fare = (fareMap[train.compartment] || 500) * passengers;
+    document.getElementById('fareAmount').textContent = `₹${fare.toLocaleString('en-IN')}`;
+    display.style.display = 'block';
+  } else {
+    display.style.display = 'none';
+  }
+}
+
+async function bookTicket() {
+  if (!currentUser) { alert("Please login first!"); return; }
+
+  const trainNo = document.getElementById('bookTrain').value;
+  const source  = document.getElementById('bookSource').value.trim();
+  const dest    = document.getElementById('bookDest').value.trim();
+  const date    = document.getElementById('bookDate').value;
+  const count   = document.getElementById('bookPassengers').value;
+  const resType = document.getElementById('bookResType').value;
+
+  if (!trainNo || !source || !dest || !date || !count) {
+    showAlert('bookAlert', 'Please fill in all fields.', 'error'); return;
+  }
+
+  const res = await fetch(`${API}/ticket/book`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      train_no: trainNo, source, destination: dest,
+      date, no_of_passengers: parseInt(count),
+      reservation_general: resType,
+      passenger_id: currentUser.passenger_id
+    })
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    pendingPaymentId = data.payment_id;
+    document.getElementById('modalAmount').textContent = `₹${data.total_amount.toLocaleString('en-IN')}`;
+    document.getElementById('modalTicketId').textContent = `Ticket #${data.ticket_id} | Payment #${data.payment_id}`;
+    document.getElementById('paymentModal').classList.add('show');
+  } else {
+    showAlert('bookAlert', data.message, 'error');
+  }
+}
+
+async function completePayment() {
+  if (!pendingPaymentId) return;
+  const res = await fetch(`${API}/payment/${pendingPaymentId}/complete`, { method: 'PUT' });
+  const data = await res.json();
+  if (data.success) {
+    showAlert('paymentAlert', '✓ Payment successful!', 'success');
+    setTimeout(() => { closePaymentModal(); showPage('myTickets'); }, 1500);
+  } else {
+    showAlert('paymentAlert', data.message, 'error');
+  }
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal').classList.remove('show');
+  pendingPaymentId = null;
+  showPage('myTickets');
+}
+
+// ============================================
+// MY TICKETS
+// ============================================
+async function loadMyTickets() {
+  if (!currentUser) { showPage('login'); return; }
+  const res = await fetch(`${API}/tickets/passenger/${currentUser.passenger_id}`);
+  const data = await res.json();
+  const container = document.getElementById('myTicketsList');
+
+  if (!data.tickets || data.tickets.length === 0) {
+    container.innerHTML = `
+      <p style="color:var(--muted); margin-bottom:1rem">No tickets yet.</p>
+      <button class="btn btn-primary" onclick="showPage('trains')">Book Your First Ticket</button>`;
+    return;
+  }
+
+  container.innerHTML = data.tickets.map(t => `
+    <div class="ticket-card">
+      <div class="ticket-route">
+        <div class="ticket-city">${t.source}</div>
+        <div class="ticket-arrow">→</div>
+        <div class="ticket-city">${t.destination}</div>
+        <span class="badge ${t.payment_status === 'Done' ? 'green' : 'red'}" style="margin-left:auto">
+          ${t.payment_status || 'Pending'}
+        </span>
+      </div>
+      <div class="ticket-details">
+        <div class="ticket-detail-item"><span class="label">Ticket ID</span><span class="value">#${t.ticket_id}</span></div>
+        <div class="ticket-detail-item"><span class="label">Train</span><span class="value">${t.train_name}</span></div>
+        <div class="ticket-detail-item"><span class="label">Date</span><span class="value">${t.date}</span></div>
+        <div class="ticket-detail-item"><span class="label">Passengers</span><span class="value">${t.no_of_passengers}</span></div>
+        <div class="ticket-detail-item"><span class="label">Class</span><span class="value">${t.compartment}</span></div>
+        <div class="ticket-detail-item"><span class="label">Amount</span><span class="value">₹${t.total_amount ? Number(t.total_amount).toLocaleString('en-IN') : '–'}</span></div>
+      </div>
+      <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+        <button class="btn btn-danger btn-sm" onclick="cancelTicket(${t.ticket_id})">Cancel Ticket</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function cancelTicket(ticketId) {
+  if (!confirm(`Cancel ticket #${ticketId}? This cannot be undone.`)) return;
+  const res = await fetch(`${API}/ticket/${ticketId}/cancel`, { method: 'DELETE' });
+  const data = await res.json();
+  alert(data.message);
+  if (data.success) loadMyTickets();
+}
+
+// ============================================
+// AUTH - PASSENGER
+// ============================================
+async function loginPassenger() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if (!phone || !pass) { showAlert('loginAlert', 'Fill in all fields.', 'error'); return; }
+
+  const res = await fetch(`${API}/passenger/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone_no: phone, password: pass })
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    currentUser = data.passenger;
+    currentUserType = 'passenger';
+    updateUIAfterLogin();
+    showPage('trains');
+  } else {
+    showAlert('loginAlert', data.message, 'error');
+  }
+}
+
+async function registerPassenger() {
+  const name   = document.getElementById('regName').value.trim();
+  const age    = document.getElementById('regAge').value;
+  const gender = document.getElementById('regGender').value;
+  const phone  = document.getElementById('regPhone').value.trim();
+  const pass   = document.getElementById('regPass').value;
+
+  if (!name || !age || !phone || !pass) {
+    showAlert('registerAlert', 'Fill in all required fields.', 'error'); return;
+  }
+
+  const res = await fetch(`${API}/passenger/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, age: parseInt(age), gender, phone_no: phone, password: pass })
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    showAlert('registerAlert', '✓ Account created! Please login.', 'success');
+    setTimeout(() => switchAuthTab('loginTab', 'passenger'), 1500);
+  } else {
+    showAlert('registerAlert', data.message, 'error');
+  }
+}
+
+async function loginSupervisor() {
+  const email = document.getElementById('supEmail').value.trim();
+  const pass  = document.getElementById('supPass').value;
+  if (!email || !pass) { showAlert('supLoginAlert', 'Fill in all fields.', 'error'); return; }
+
+  const res = await fetch(`${API}/supervisor/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: pass })
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    currentUser = data.supervisor;
+    currentUserType = 'supervisor';
+    updateUIAfterLogin();
+    showPage('admin');
+  } else {
+    showAlert('supLoginAlert', data.message, 'error');
+  }
+}
+
+// ============================================
+// ADMIN
+// ============================================
+async function loadAdminData() {
+  document.getElementById('supervisorName').textContent = currentUser?.name || 'Supervisor';
+  await loadAdminTrains();
+  await loadAdminTickets();
+}
+
+async function loadAdminTrains() {
+  const res = await fetch(`${API}/supervisor/trains`);
+  const data = await res.json();
+  const tbody = document.getElementById('adminTrainsBody');
+  tbody.innerHTML = (data.trains || []).map(t => `
+    <tr>
+      <td><strong>${t.train_no}</strong></td>
+      <td>${t.train_name}</td>
+      <td><span class="badge">${t.compartment}</span></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${t.reservation_halting || '–'}</td>
+      <td><span class="badge green">${t.reservation_chart || 'Available'}</span></td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteTrain('${t.train_no}')">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+
+  // Update stats
+  document.getElementById('adminStats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${data.trains?.length || 0}</div><div class="stat-label">Total Trains</div></div>
+  `;
+}
+
+async function loadAdminTickets() {
+  const res = await fetch(`${API}/supervisor/all-tickets`);
+  const data = await res.json();
+  const tickets = data.tickets || [];
+  const tbody = document.getElementById('adminTicketsBody');
+
+  // Update stats
+  const paid = tickets.filter(t => t.payment_status === 'Done').length;
+  const existing = document.getElementById('adminStats');
+  existing.innerHTML += `
+    <div class="stat-card"><div class="stat-val">${tickets.length}</div><div class="stat-label">Total Tickets</div></div>
+    <div class="stat-card"><div class="stat-val">${paid}</div><div class="stat-label">Paid Tickets</div></div>
+    <div class="stat-card"><div class="stat-val">₹${tickets.reduce((s,t) => s + (parseFloat(t.total_amount)||0), 0).toLocaleString('en-IN')}</div><div class="stat-label">Total Revenue</div></div>
+  `;
+
+  tbody.innerHTML = tickets.map(t => `
+    <tr>
+      <td>#${t.ticket_id}</td>
+      <td>${t.passenger_name}<br><small style="color:var(--muted)">${t.phone_no}</small></td>
+      <td>${t.source} → ${t.destination}</td>
+      <td>${t.train_name}</td>
+      <td>${t.date}</td>
+      <td>${t.no_of_passengers}</td>
+      <td>₹${t.total_amount ? Number(t.total_amount).toLocaleString('en-IN') : '–'}</td>
+      <td><span class="badge ${t.payment_status === 'Done' ? 'green' : 'red'}">${t.payment_status || 'Pending'}</span></td>
+    </tr>
+  `).join('');
+}
+
+async function addTrain() {
+  const no = document.getElementById('atNo').value.trim();
+  const name = document.getElementById('atName').value.trim();
+  const comp = document.getElementById('atComp').value;
+  const halt = document.getElementById('atHalting').value.trim();
+  const stn  = document.getElementById('atStations').value.trim();
+
+  if (!no || !name) { showAlert('addTrainAlert', 'Train number and name are required.', 'error'); return; }
+
+  const res = await fetch(`${API}/supervisor/trains`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ train_no: no, train_name: name, compartment: comp, reservation_halting: halt, train_halt_at_station: stn })
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    showAlert('addTrainAlert', '✓ Train added!', 'success');
+    document.getElementById('atNo').value = '';
+    document.getElementById('atName').value = '';
+    document.getElementById('atHalting').value = '';
+    document.getElementById('atStations').value = '';
+    loadAdminTrains();
+    allTrainsData = [];
+  } else {
+    showAlert('addTrainAlert', data.message, 'error');
+  }
+}
+
+async function deleteTrain(trainNo) {
+  if (!confirm(`Delete train ${trainNo}?`)) return;
+  const res = await fetch(`${API}/supervisor/trains/${trainNo}`, { method: 'DELETE' });
+  const data = await res.json();
+  alert(data.message);
+  if (data.success) { loadAdminTrains(); allTrainsData = []; }
+}
+
+// ============================================
+// UI HELPERS
+// ============================================
+function updateUIAfterLogin() {
+  document.getElementById('loginBtn').style.display = 'none';
+  document.getElementById('logoutBtn').style.display = 'block';
+  if (currentUserType === 'passenger') {
+    document.getElementById('navMyTickets').style.display = 'block';
+    document.getElementById('navAdmin').style.display = 'none';
+  } else {
+    document.getElementById('navAdmin').style.display = 'block';
+    document.getElementById('navMyTickets').style.display = 'none';
+  }
+}
+
+function logout() {
+  currentUser = null; currentUserType = null;
+  document.getElementById('loginBtn').style.display = 'block';
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('navMyTickets').style.display = 'none';
+  document.getElementById('navAdmin').style.display = 'none';
+  showPage('home');
+}
+
+function switchLoginTab(type) {
+  document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('passengerAuth').style.display = type === 'passenger' ? 'block' : 'none';
+  document.getElementById('supervisorAuth').style.display = type === 'supervisor' ? 'block' : 'none';
+}
+
+function switchAuthTab(tabId, type) {
+  document.querySelectorAll(`#${type}Auth .tab-btn`).forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`#${type}Auth .tab-content`).forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+function switchAdminTab(tabId) {
+  document.querySelectorAll('#page-admin .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-admin .tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  if (tabId === 'adminTickets') loadAdminTickets();
+  if (tabId === 'adminTrains') loadAdminTrains();
+}
+
+// Init
+loadTrains();
+</script>
+</body>
+</html>
